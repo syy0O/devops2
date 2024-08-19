@@ -7,7 +7,7 @@ on:
 jobs:
   frontend-deploy:
     if: github.ref == 'refs/heads/frontend'
-    name: Deploy to K8S
+    name: Deploy to K8S frontend
     runs-on: ubuntu-latest
 
     steps:
@@ -30,39 +30,39 @@ jobs:
           chmod +x ./gradlew
           ./gradlew docker
 
-      - name: Login to DockerHub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: push
-        uses: docker/build-push-action@v6
-        with:
-          push: true
-          tags: syy00/frontend:1.5
+      - name: Login to docker hub
+        uses: actions-hub/docker/login@master
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: executing remote ssh commands using password
-          uses: appleboy/ssh-action@master
-          with:
-            host: ${{ secrets.HOST }}
-            username: ${{ secrets.USERNAME }}
-            password: ${{ secrets.PASSWORD }}
-            port: ${{ secrets.PORT }}
-            script: |
-              kubectl apply -f - <<EOF
-              apiVersion: v1
-              kind: Pod
-              metadata:
-                name: frontend
-              spec:
-                containers:
-                  - name: frontend
-                    image: syy00/frontend:1.5
-              EOF
 
+      - name: Push Frontend Docker image
+        uses: actions-hub/docker@master
+        with:
+          args: push syy00/frontend:1.5
+
+      - name: restart frontend container
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          password: ${{ secrets.PASSWORD }}
+          port: ${{ secrets.PORT }}
+          script: |
+            kubectl apply -f - <<EOF
+            apiVersion: v1
+            kind: Pod
+            metadata:
+              name: frontend
+            spec:
+              containers:
+                - name: frontend
+                  image: syy00/frontend:1.5
+            EOF
   backend-deploy:
     if: github.ref == 'refs/heads/backend'
-    name: Deploy to K8S
+    name: Deploy to K8S backend
     runs-on: ubuntu-latest
 
     steps:
@@ -85,32 +85,32 @@ jobs:
           chmod +x ./gradlew
           ./gradlew docker -Pplatform=backend
 
-      - name: Login to DockerHub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: push
-        uses: docker/build-push-action@v6
-        with:
-          push: true
-          tags: syy00/backend:1.5
+      - name: Login to docker hub
+        uses: actions-hub/docker/login@master
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: executing remote ssh commands using password
-          uses: appleboy/ssh-action@master
-          with:
-            host: ${{ secrets.HOST }}
-            username: ${{ secrets.USERNAME }}
-            password: ${{ secrets.PASSWORD }}
-            port: ${{ secrets.PORT }}
-            script: |
-              kubectl apply -f - <<EOF
-              apiVersion: v1
-              kind: Pod
-              metadata:
-                name: backend
-              spec:
-                containers:
-                  - name: backend
-                    image: syy00/backend:1.5
-              EOF
+      - name: Push Backend Docker image
+        uses: actions-hub/docker@master
+        with:
+          args: push syy00/backend:1.5
+
+      - name: restart backend container
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          password: ${{ secrets.PASSWORD }}
+          port: ${{ secrets.PORT }}
+          script: |
+            kubectl apply -f - <<EOF
+            apiVersion: v1
+            kind: Pod
+            metadata:
+              name: backend
+            spec:
+              containers:
+                - name: backend
+                  image: syy00/backend:1.5
+            EOF
