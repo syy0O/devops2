@@ -50,6 +50,9 @@ jobs:
           password: ${{ secrets.PASSWORD }}
           port: ${{ secrets.PORT }}
           script: |
+            mkdir -p $HOME/.kube
+            echo qwer1234 | sudo -S cp -f /etc/kubernetes/admin.conf $HOME/.kube/config
+            sudo chown $(id -u):$(id -g) $HOME/.kube/config
             kubectl apply -f - <<EOF
             apiVersion: v1
             kind: Pod
@@ -104,6 +107,9 @@ jobs:
           password: ${{ secrets.PASSWORD }}
           port: ${{ secrets.PORT }}
           script: |
+            mkdir -p $HOME/.kube
+            echo qwer1234 | sudo -S cp -f /etc/kubernetes/admin.conf $HOME/.kube/config
+            sudo chown $(id -u):$(id -g) $HOME/.kube/config
             kubectl apply -f - <<EOF
             apiVersion: v1
             kind: Pod
