@@ -1,0 +1,6 @@
+FROM  nginx:latest
+ARG NGINX_CONF
+ARG VUE_DIST
+ADD ${NGINX_CONF} /etc/nginx/conf.d/default.conf
+ADD ${VUE_DIST} /usr/share/nginx/html
+CMD  nginx -g "daemon off;"

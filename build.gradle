@@ -1,0 +1,111 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.3.2'
+    id 'io.spring.dependency-management' version '1.1.6'
+    id 'com.palantir.docker' version '0.36.0'
+}
+
+group = 'com.example'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+def platform = project.hasProperty('platform') ? project.property('platform') : "frontend"
+
+docker {
+    if (platform == "frontend") {
+        name "syy00/frontend:"+version
+        files "frontend/dist"
+        buildArgs(['DIST_DIR': "/"])
+        dockerfile file('Dockerfile.frontend')
+    } else {
+        name "syy00/backend:"+version
+        files tasks.bootJar.outputs.files
+        buildArgs(['JAR_FILE': tasks.bootJar.outputs.files.singleFile.name])
+        dockerfile file('Dockerfile')
+    }
+}
+
+task buildDocker(type: Exec) {
+    workingDir project.rootDir
+    commandLine 'sh', '-c', 'chmod +x ./gradlew && ./gradlew docker', '-Pplatform=backend'
+}
+
+task dockerComposeUp(type: Exec, dependsOn: buildDocker) {
+    environment 'DOCKER_IMAGE_TAG', version
+    commandLine 'docker-compose', 'up', '--build', '-d'
+}
+
+task buildFrontend(type: Exec) {
+    workingDir 'frontend'
+    commandLine '/opt/homebrew/opt/node@20/bin/npm', 'run', 'build'
+}
+
+task buildDockerFrontend(type: Exec, dependsOn: buildFrontend) {
+    workingDir project.rootDir
+    commandLine 'sh', '-c', 'chmod +x ./gradlew && ./gradlew docker'
+}
+
+task dockerComposeUpFrontend(type: Exec, dependsOn: buildDockerFrontend) {
+    environment 'DOCKER_IMAGE_TAG', version
+    commandLine 'docker-compose', 'up', '--build', '-d'
+}
+
+
+
+
+
+
+
+
+
+//docker {
+//    name "syy00/test:" + version
+//    files tasks.bootJar.outputs.files
+//    buildArgs(['JAR_FILE':tasks.bootJar.outputs.files.singleFile.name])
+//    dockerfile file('Dockerfile')
+//}
+//
+////docker {
+////    name "syy/test-frontend:" + version
+////    files "frontend/dist", "frontend/default.conf"
+////    buildArgs(['NGINX_CONF':"./frontend/default.conf", "VUE_DIST":"./frontend/dist"])
+////    dockerfile file('Dockerfile2')
+////}
+//
+//
+//task buildDocker(type: Exec) {
+//    commandLine 'sh', '-c', 'chmod +x ./gradlew && ./gradlew docker'
+////    commandLine './gradlew.bat', 'docker'
+//}
+//
+//task dockerComposeUp(type: Exec, dependsOn: buildDocker) {
+//    environment 'DOCKER_IMAGE_TAG', version
+//    commandLine 'docker-compose', 'up','--build','-d'
+//}
