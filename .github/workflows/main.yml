@@ -41,6 +41,25 @@ jobs:
           push: true
           tags: syy00/frontend:1.5
 
+      - name: executing remote ssh commands using password
+          uses: appleboy/ssh-action@master
+          with:
+            host: ${{ secrets.HOST }}
+            username: ${{ secrets.USERNAME }}
+            password: ${{ secrets.PASSWORD }}
+            port: ${{ secrets.PORT }}
+            script: |
+              kubectl apply -f - <<EOF
+              apiVersion: v1
+              kind: Pod
+              metadata:
+                name: frontend
+              spec:
+                containers:
+                  - name: frontend
+                    image: syy00/frontend:1.5
+              EOF
+
   backend-deploy:
     if: github.ref == 'refs/heads/backend'
     name: Deploy to K8S
@@ -76,3 +95,22 @@ jobs:
         with:
           push: true
           tags: syy00/backend:1.5
+
+      - name: executing remote ssh commands using password
+          uses: appleboy/ssh-action@master
+          with:
+            host: ${{ secrets.HOST }}
+            username: ${{ secrets.USERNAME }}
+            password: ${{ secrets.PASSWORD }}
+            port: ${{ secrets.PORT }}
+            script: |
+              kubectl apply -f - <<EOF
+              apiVersion: v1
+              kind: Pod
+              metadata:
+                name: backend
+              spec:
+                containers:
+                  - name: backend
+                    image: syy00/backend:1.5
+              EOF
