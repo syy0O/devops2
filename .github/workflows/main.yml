@@ -50,7 +50,7 @@ jobs:
           password: ${{ secrets.PASSWORD }}
           port: ${{ secrets.PORT }}
           script: |
-            kubectl apply -f - <<EOF
+            kubectl apply --validate=false -f - <<EOF
             apiVersion: v1
             kind: Pod
             metadata:
@@ -104,7 +104,7 @@ jobs:
           password: ${{ secrets.PASSWORD }}
           port: ${{ secrets.PORT }}
           script: |
-            kubectl apply -f - <<EOF
+            kubectl apply --validate=false -f - <<EOF
             apiVersion: v1
             kind: Pod
             metadata:
